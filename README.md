@@ -24,7 +24,7 @@ There are two steps to install the script. First, letting OBS know where the scr
 
 1. Download code in a directory of your choice by your method of choice. If you don't know how to download, just click the 'Code' button on the GitHub page, and click 'Download ZIP'.
 
-	> *OBS has scripts in `<OBS_Install_Folder>/data/obs-plugins/frontend-tools/scripts/`, but you can put yours wherever you want.*
+	> *OBS has scripts in `C:\Program Files\obs-studio\data\obs-plugins\frontend-tools\scripts`, but you can put yours wherever you want.*
 
 2. Open your OBS, go to `tools`>`scripts` in the menu bar.
 
