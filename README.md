@@ -34,7 +34,7 @@ There are two steps to install the script. First, letting OBS know where the scr
 
 If you haven't already, you'll need to add a Python interpreter to OBS to run the script.
 
-1. Download [Python 3.6.x](https://www.python.org/downloads/release/python-368/). Scroll down and download a 64 bit installer for your OS. Make sure to note where you install Python. Confirm that 'Add Python 3.6 to PATH' is checked, and click 'Install Now'.
+1. Download [Python 3.6.x](https://www.python.org/downloads/release/python-368/). Scroll down and download a 64 bit installer for your OS i.e. `Windows x86-64 executable installer`. Make sure to note where you install Python. Confirm that 'Add Python 3.6 to PATH' is checked, and click 'Install Now'.
 
 	![Python 3.9.13 install screen](docs/pythonInstall.png)
 
