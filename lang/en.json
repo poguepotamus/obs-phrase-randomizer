@@ -1,0 +1,13 @@
+{
+    "description": "An OBS script to show random phrases from a list filled with phrases from other lists.",
+    "phrases": "Phrases",
+    "source": "Source",
+    "animation_enabled": "Enable animation",
+    "animation_length": "Animation length (s)",
+    "animation_delay": "Animation delay (ms)",
+    "animation_deceleration": "Animation Deceleration",
+    "sound_enabled": "Play sound at result",
+    "sound_path": "Sound file path",
+    "get_random": "Generate Random Phrase",
+    "reset": "Reset"
+}

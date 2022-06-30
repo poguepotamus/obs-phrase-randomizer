@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# VSCode settings
+.vscode/
+
+# Local files
+.test
+
+# OBS settings file
+phraseRandomizer.settings.json
