@@ -384,10 +384,10 @@ def on_hotkey_get_random_phrase(pressed):
 	if pressed:
 		on_click_get_random_phrase()
 
-def on_clear_click(_, __):
-	Data.phrases = []
-	obs.obs_data_set_string(Data.settings, 'text', '\n'.join(Data.phrases))
-	save_settings()
+def on_click_clear_cache(_, __):
+	''' Clearing our list cache
+	'''
+	Data.Randomizer.clear_list_cache()
 
 # ------------------------------------------------------------
 
@@ -572,7 +572,7 @@ def script_properties():
 
 	obs.obs_properties_add_button(Data.props,
 		'button2',
-		Data.lang.t('reset'),
-		on_clear_click)
+		Data.lang.t('clear_cache'),
+		on_click_clear_cache)
 
 	return Data.props
