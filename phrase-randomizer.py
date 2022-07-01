@@ -39,7 +39,7 @@ class Phrase_Randomizer:
 			list_directory: Directory to look for our lists.
 
 		'''
-		self._list_directory = list_directory
+		self._lists_dir = list_directory
 		self._phrases = []
 		self._lists   = {}
 
@@ -103,7 +103,7 @@ class Phrase_Randomizer:
 
 		# Attempting to open our list.
 		try:
-			list_file_path = self._list_directory / f'{list_name}.txt'
+			list_file_path = self._lists_dir / f'{list_name}.txt'
 			with open(list_file_path, 'r', encoding='utf-8') as list_file:
 				self._lists[list_name] = [line.strip() for line in list_file.readlines()]
 
@@ -146,6 +146,15 @@ class Phrase_Randomizer:
 			phrase_list(list:str): A list of phrases from the user.
 		'''
 		self._phrases = phrase_list
+
+	def set_lists_dir(self, lists_dir:Path):
+		''' Updates the path in whci to search for lists.
+
+		Arguments:
+			lists_dir(Path): The directory in which to search for our lists. They should be immediate children of this directory.
+		'''
+		print(f'setting our new lists directory to `{Data.lists_dir}')
+		self._lists_dir = Path(lists_dir).resolve()
 
 	def clear_list_cache(self):
 		''' Forces a clear of the list cache. Useful if you've updated a list while the script has been launched and seen the list.
@@ -202,7 +211,8 @@ class Data:
 
 	phrases = []
 	source_name = ''
-	Randomizer = Phrase_Randomizer(SCRIPT_DIRECTORY / 'lists')
+	lists_dir = SCRIPT_DIRECTORY / 'lists'
+	Randomizer = Phrase_Randomizer(lists_dir)
 
 	# Animation Settings
 	animation_enabled      = True
@@ -412,6 +422,7 @@ def script_defaults(settings):
 	https://obsproject.com/docs/scripting.html#script_defaults
 	'''
 	obs.obs_data_set_default_string(settings, 'phrases', 'Each\nLine\nis\na\nPhrase')
+	obs.obs_data_set_default_string(settings, 'lists_dir', str(Data.lists_dir))
 
 	# Animation settings defaults
 	obs.obs_data_set_default_bool(settings, 'animation_enabled',      Data.animation_enabled)
@@ -420,7 +431,7 @@ def script_defaults(settings):
 	obs.obs_data_set_default_int( settings, 'animation_deceleration', Data.animation_deceleration)
 
 	# Sound settings defaults
-	obs.obs_data_set_default_string(settings, 'sound_path', str(SCRIPT_DIRECTORY / 'alert.mp3'))
+	obs.obs_data_set_default_string(settings, 'sound_path', str(Data.sound_path))
 
 	# Language settings defaults
 	obs.obs_data_set_default_string(settings, 'lang', 'en')
@@ -455,6 +466,8 @@ def script_update(settings):
 	Data.phrases     = phrases
 	Data.source_name = obs.obs_data_get_string(settings, 'source')
 	Data.Randomizer.set_phrase_list(Data.phrases)
+	Data.lists_dir = obs.obs_data_get_string(settings, 'lists_dir')
+	Data.Randomizer.set_lists_dir(Data.lists_dir)
 
 	# Getting animation settings
 	Data.animation_enabled      = obs.obs_data_get_bool(settings, 'animation_enabled')
@@ -529,6 +542,13 @@ def script_properties():
 		Data.lang.t('Phrases'),
 		obs.OBS_TEXT_MULTILINE)
 
+	obs.obs_properties_add_path(Data.props,
+		'lists_dir',
+		Data.lang.t('lists_dir'),
+		obs.OBS_PATH_DIRECTORY,
+		'dir',
+		str(SCRIPT_DIRECTORY))
+
 	# Animation settings
 	######################################
 	obs.obs_properties_add_bool(Data.props,
@@ -561,7 +581,7 @@ def script_properties():
 		Data.lang.t('sound_path'),
 		obs.OBS_PATH_FILE,
 		'audio',
-		'')
+		str(SCRIPT_DIRECTORY))
 
 	# Inputs
 	######################################
