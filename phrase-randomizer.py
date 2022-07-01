@@ -446,6 +446,7 @@ def script_update(settings):
 	'''
 	# Gathering our phrases
 	phrases = obs.obs_data_get_string(settings, 'phrases').splitlines()
+	phrases = [phrase.strip().replace('\\n', '\n') for phrase in phrases]
 	# Removing empty strings from list
 	if '' in phrases:
 		phrases.remove('')
