@@ -411,10 +411,10 @@ def script_defaults(settings):
 	obs.obs_data_set_default_string(settings, 'phrases', 'Each\nLine\nis\na\nPhrase')
 
 	# Animation settings defaults
-	obs.obs_data_set_default_bool(  settings, 'animation_enabled',  Data.animation_enabled)
-	obs.obs_data_set_default_int(   settings, 'animation_delay',      Data.animation_delay)
-	obs.obs_data_set_default_int(   settings, 'animation_length', Data.animation_length)
-	obs.obs_data_set_default_int(   settings, 'animation_deceleration',    Data.animation_deceleration)
+	obs.obs_data_set_default_bool(settings, 'animation_enabled',      Data.animation_enabled)
+	obs.obs_data_set_default_int( settings, 'animation_delay',        Data.animation_delay)
+	obs.obs_data_set_default_int( settings, 'animation_length',       Data.animation_length)
+	obs.obs_data_set_default_int( settings, 'animation_deceleration', Data.animation_deceleration)
 
 	# Sound settings defaults
 	obs.obs_data_set_default_string(settings, 'sound_path', str(SCRIPT_DIRECTORY / 'alert.mp3'))
@@ -451,14 +451,14 @@ def script_update(settings):
 	Data.Randomizer.set_phrase_list(Data.phrases)
 
 	# Getting animation settings
-	Data.animation_enabled      = obs.obs_data_get_bool(  settings, 'animation_enabled')
-	Data.animation_deceleration = obs.obs_data_get_int(   settings, 'animation_deceleration')
-	Data.animation_length       = obs.obs_data_get_int(   settings, 'animation_length')
-	Data.animation_delay        = obs.obs_data_get_int(   settings, 'animation_delay')
+	Data.animation_enabled      = obs.obs_data_get_bool(settings, 'animation_enabled')
+	Data.animation_deceleration = obs.obs_data_get_int( settings, 'animation_deceleration')
+	Data.animation_length       = obs.obs_data_get_int( settings, 'animation_length')
+	Data.animation_delay        = obs.obs_data_get_int( settings, 'animation_delay')
 
 	# Getting sound settings
 	Data.sound_enabled = obs.obs_data_get_bool(  settings, 'sound_enabled')
-	Data.sound_path = obs.obs_data_get_string(settings, 'sound_path')
+	Data.sound_path    = obs.obs_data_get_string(settings, 'sound_path')
 
 	# Getting language settings
 	Data.lang_code = obs.obs_data_get_string(settings, 'lang')
