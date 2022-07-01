@@ -368,7 +368,7 @@ def load_settings():
 # Events
 ########################################
 
-def on_get_random_click(_=None, __=None):
+def on_click_get_random_phrase(_=None, __=None):
 	''' When someone clicks the random button on the Scripts settings menu
 	'''
 	print('Random phrase button pressed')
@@ -377,12 +377,12 @@ def on_get_random_click(_=None, __=None):
 	# Update the text with the phrase
 	update_text(phrases)
 
-def on_get_random_hotkey_pressed(pressed):
+def on_hotkey_get_random_phrase(pressed):
 	''' When someone hits the hotkey to generate the random phrase
 	'''
 	print('Random phrase hotkey pressed')
 	if pressed:
-		on_get_random_click()
+		on_click_get_random_phrase()
 
 def on_clear_click(_, __):
 	Data.phrases = []
@@ -435,7 +435,7 @@ def script_description():
 def script_load(settings):
 	''' Called for one-time init using values of data settings
 	'''
-	hotkey_get_random.htk_copy = Hotkey(on_get_random_hotkey_pressed, settings, 'get_random_text', Data.lang.t('get_random'))
+	hotkey_get_random.htk_copy = Hotkey(on_hotkey_get_random_phrase, settings, 'get_random_text', Data.lang.t('get_random'))
 
 
 def script_update(settings):
@@ -568,7 +568,7 @@ def script_properties():
 	obs.obs_properties_add_button(Data.props,
 		'button',
 		Data.lang.t('get_random'),
-		on_get_random_click)
+		on_click_get_random_phrase)
 
 	obs.obs_properties_add_button(Data.props,
 		'button2',
