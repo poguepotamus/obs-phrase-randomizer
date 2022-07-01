@@ -206,7 +206,7 @@ class Data:
 
 	# Animation Settings
 	animation_enabled      = True
-	animation_length       = 6
+	animation_length       = 4
 	animation_delay        = 52
 	animation_deceleration = 52
 
