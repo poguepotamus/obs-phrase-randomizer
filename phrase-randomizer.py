@@ -446,10 +446,12 @@ def script_update(settings):
 	'''
 	# Gathering our phrases
 	phrases = obs.obs_data_get_string(settings, 'phrases').splitlines()
-	phrases = [phrase.strip() for phrase in phrases]
+	# Removing empty strings from list
+	if '' in phrases:
+		phrases.remove('')
 
 	Data.settings    = settings
-	Data.phrases     = phrases.remove('') if '' in phrases else phrases
+	Data.phrases     = phrases
 	Data.source_name = obs.obs_data_get_string(settings, 'source')
 	Data.Randomizer.set_phrase_list(Data.phrases)
 
