@@ -274,7 +274,7 @@ def update_text(phrases:list):
 	# Displaying our animation if requested
 	print('Playing animation')
 	if Data.animation_enabled:
-		animate_selection(source_data, source, phrases)
+		play_animation(source_data, source, phrases)
 
 	# Displaying just the value if requested
 	else:
@@ -291,9 +291,7 @@ def update_text(phrases:list):
 	if Data.sound_enabled:
 		play_sound()
 
-def animate_selection(source_data, source, phrases):
-	print('animating source')
-	print(f'Animation length {Data.animation_length}')
+def play_animation(source_data, source, phrases):
 	# Some values for easy reference
 	anim_length       = Data.animation_length
 	anim_delay        = Data.animation_delay / 1000 # in ms
