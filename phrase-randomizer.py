@@ -260,7 +260,6 @@ class HotkeyStore:
 def update_text(phrases:list):
 	''' Updates the text displayed in the source
 	'''
-	# Debugging some stuff @TODO remove
 	print('Updating text')
 
 	# Getting reference to our source and some example data
