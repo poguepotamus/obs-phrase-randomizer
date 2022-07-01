@@ -152,12 +152,12 @@ class Phrase_Randomizer:
 		'''
 		self._lists = {}
 
-	def eager_load_lists(self):
+	# def eager_load_lists(self):
 		''' A function to increase performance during processing-intense moments.
 
 		This forces the class to load all lists in the list directory to prevent having to look for them during runtime.
 		'''
-		pass #@TODO Impliment list eager loading
+		#@TODO Impliment list eager loading
 
 # Language class to help manage language translation
 ########################################
