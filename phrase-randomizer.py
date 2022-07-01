@@ -373,12 +373,9 @@ def on_get_random_click(_=None, __=None):
 	''' When someone clicks the random button on the Scripts settings menu
 	'''
 	print('Random phrase button pressed')
-	print(f'Data.phrases = {Data.phrases}')
-	print(f'Data.Randomizer._phrases = {Data.Randomizer._phrases}')
 	# Generate random phrases
 	phrases = Data.Randomizer.get_random_phrases(14)
 	# Update the text with the phrase
-	print(f'local phrase = {phrases}')
 	update_text(phrases)
 
 def on_get_random_hotkey_pressed(pressed):
