@@ -276,11 +276,12 @@ def update_text(phrases:list):
 	if Data.animation_enabled:
 		animate_selection(source_data, source, phrases)
 
-	# Updating the text with it's final value
-	phrase = random_choice(phrases)
-	print(f'Setting text to {phrase}')
-	obs.obs_data_set_string(source_data, 'text', phrase)
-	obs.obs_source_update(source, source_data)
+	# Displaying just the value if requested
+	else:
+		phrase = random_choice(phrases)
+		print(f'Setting text to {phrase}')
+		obs.obs_data_set_string(source_data, 'text', phrase)
+		obs.obs_source_update(source, source_data)
 
 	# Reasing access to our data and source now that we're done
 	obs.obs_data_release(source_data)
