@@ -211,6 +211,7 @@ class Data:
 
 	phrases = []
 	source_name = ''
+	phrase_lifetime = 8000
 	lists_dir = SCRIPT_DIRECTORY / 'lists'
 	Randomizer = Phrase_Randomizer(lists_dir)
 
@@ -222,7 +223,7 @@ class Data:
 
 	# Sound settings
 	sound_enabled = False
-	sound_path = ''
+	sound_path = SCRIPT_DIRECTORY / 'sounds' / 'alert.mp3'
 	media_source = None # Null pointer
 	output_index = 63 # Last index
 
@@ -292,6 +293,10 @@ def update_text(phrases:list):
 		obs.obs_data_set_string(source_data, 'text', phrase)
 		obs.obs_source_update(source, source_data)
 
+	# Settings a timer to remove text after delay
+	if Data.phrase_lifetime != 0:
+		obs.timer_add(clear_source_text, Data.phrase_lifetime)
+
 	# Reasing access to our data and source now that we're done
 	obs.obs_data_release(source_data)
 	obs.obs_source_release(source)
@@ -326,6 +331,25 @@ def play_animation(source_data, source, phrases):
 		# Killing after 200 iterations just in case
 		if deceleration_index > 200:
 			break
+
+
+def clear_source_text():
+	# We start by stopping the timer that called this function so that it doesn't get called again
+	obs.remove_current_callback()
+
+	# Getting reference to our source and some example data
+	source      = obs.obs_get_source_by_name(Data.source_name)
+	source_data = obs.obs_data_create()
+
+	# Displaying a random phrase
+	obs.obs_data_set_string(source_data, 'text', '')
+	# obs.obs_data_set_double(source_data, 'opacity', 0)
+	obs.obs_source_update(source, source_data)
+
+	# Reasing access to our data and source now that we're done
+	obs.obs_data_release(source_data)
+	obs.obs_source_release(source)
+
 
 def play_sound():
 	if Data.media_source == None:
@@ -421,20 +445,23 @@ def script_defaults(settings):
 
 	https://obsproject.com/docs/scripting.html#script_defaults
 	'''
+	# Language settings defaults
+	obs.obs_data_set_default_string(settings, 'lang', 'en')
+
+	# Phrases section
 	obs.obs_data_set_default_string(settings, 'phrases', 'Each\nLine\nis\na\nPhrase')
+	obs.obs_data_set_default_int(   settings, 'phrase_lifetime', Data.phrase_lifetime)
 	obs.obs_data_set_default_string(settings, 'lists_dir', str(Data.lists_dir))
 
 	# Animation settings defaults
-	obs.obs_data_set_default_bool(settings, 'animation_enabled',      Data.animation_enabled)
-	obs.obs_data_set_default_int( settings, 'animation_delay',        Data.animation_delay)
-	obs.obs_data_set_default_int( settings, 'animation_length',       Data.animation_length)
-	obs.obs_data_set_default_int( settings, 'animation_deceleration', Data.animation_deceleration)
+	obs.obs_data_set_default_bool( settings, 'animation_enabled',      Data.animation_enabled)
+	obs.obs_data_set_default_int(  settings, 'animation_delay',        Data.animation_delay)
+	obs.obs_data_set_default_int(  settings, 'animation_length',       Data.animation_length)
+	obs.obs_data_set_default_int(  settings, 'animation_deceleration', Data.animation_deceleration)
 
 	# Sound settings defaults
+	obs.obs_data_set_default_bool(  settings, 'sound_enabled', Data.sound_enabled)
 	obs.obs_data_set_default_string(settings, 'sound_path', str(Data.sound_path))
-
-	# Language settings defaults
-	obs.obs_data_set_default_string(settings, 'lang', 'en')
 
 
 def script_description():
@@ -455,19 +482,25 @@ def script_update(settings):
 	Arguments:
 		settings: the provided settings from OBS
 	'''
-	# Gathering our phrases
-	phrases = obs.obs_data_get_string(settings, 'phrases').splitlines()
-	phrases = [phrase.strip().replace('\\n', '\n') for phrase in phrases]
-	# Removing empty strings from list
-	if '' in phrases:
-		phrases.remove('')
+	Data.settings = settings
 
-	Data.settings    = settings
-	Data.phrases     = phrases
+	# Updating language settings
+	Data.lang_code = obs.obs_data_get_string(settings, 'lang')
+	Data.lang      = Lang(Data.lang_code)
+
+	# Updating source name
 	Data.source_name = obs.obs_data_get_string(settings, 'source')
-	Data.Randomizer.set_phrase_list(Data.phrases)
-	Data.lists_dir = obs.obs_data_get_string(settings, 'lists_dir')
-	Data.Randomizer.set_lists_dir(Data.lists_dir)
+
+	# Gathering our phrases
+	Data.phrases = obs.obs_data_get_string(settings, 'phrases').splitlines()
+	Data.phrases = [phrase.strip().replace('\\n', '\n') for phrase in Data.phrases]
+	# Removing empty strings from list
+	if '' in Data.phrases:
+		Data.phrases.remove('')
+
+	# Lists folder and phrase lifetime
+	Data.phrase_lifetime = obs.obs_data_get_int(   settings, 'phrase_lifetime')
+	Data.lists_dir       = obs.obs_data_get_string(settings, 'lists_dir')
 
 	# Getting animation settings
 	Data.animation_enabled      = obs.obs_data_get_bool(settings, 'animation_enabled')
@@ -479,9 +512,9 @@ def script_update(settings):
 	Data.sound_enabled = obs.obs_data_get_bool(  settings, 'sound_enabled')
 	Data.sound_path    = obs.obs_data_get_string(settings, 'sound_path')
 
-	# Getting language settings
-	Data.lang_code = obs.obs_data_get_string(settings, 'lang')
-	Data.lang      = Lang(Data.lang_code)
+	# Updating our randomizer
+	Data.Randomizer.set_phrase_list(Data.phrases)
+	Data.Randomizer.set_lists_dir(Data.lists_dir)
 
 	# Saving our settings to file
 	save_settings()
@@ -541,6 +574,11 @@ def script_properties():
 		'phrases',
 		Data.lang.t('Phrases'),
 		obs.OBS_TEXT_MULTILINE)
+
+	obs.obs_properties_add_int_slider(Data.props,
+		'phrase_lifetime',
+		Data.lang.t('phrase_lifetime'),
+		0, 16000, 250)
 
 	obs.obs_properties_add_path(Data.props,
 		'lists_dir',
