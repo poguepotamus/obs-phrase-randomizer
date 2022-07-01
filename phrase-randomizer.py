@@ -205,9 +205,9 @@ class Data:
 	Randomizer = Phrase_Randomizer(SCRIPT_DIRECTORY / 'lists')
 
 	# Animation Settings
-	animation_enabled      = False
+	animation_enabled      = True
+	animation_length       = 6
 	animation_delay        = 52
-	animation_length       = 2
 	animation_deceleration = 52
 
 	# Sound settings
@@ -292,24 +292,31 @@ def update_text(phrases:list):
 		play_sound()
 
 def play_animation(source_data, source, phrases):
+	print('Playing animation')
 	# Some values for easy reference
-	anim_length       = Data.animation_length
 	anim_delay        = Data.animation_delay / 1000 # in ms
 	anim_deceleration = Data.animation_deceleration / 1000 # in ms
+	anim_length       = Data.animation_length + anim_delay
 
-	deceleration = 0
+	deceleration_index = 1
 	while anim_length > 0:
+		# Sleeping, then continuing if we have time remaining
+		anim_length = anim_length - anim_delay
+		sleep(anim_delay)
+
 		# Displaying a random phrase
-		obs.obs_data_set_string(source_data, 'text', random_choice(phrases))
+		obs.obs_data_set_string(source_data, 'text', phrases[deceleration_index % len(phrases)])
 		obs.obs_source_update(source, source_data)
 
 		# Calculating how much sleep time, decel, and the remaining time for our animation.
-		current_sleep_time = anim_delay * (1 + deceleration)
-		deceleration = deceleration + anim_deceleration
-		anim_length =- current_sleep_time
+		''' I've spent quite a bit on this animation function. This is a cubic function that is scaled by the animation length. This keeps the animation smooth reguardless the time. If you find something better please submit a pull request :)
+		'''
+		anim_delay = anim_deceleration * (deceleration_index / anim_length * 2) ** (1/4) # Cubic root
+		deceleration_index += 1
 
-		# Sleeping, then continuing if we have time remaining
-		sleep(current_sleep_time)
+		# Killing after 200 iterations just in case
+		if deceleration_index > 200:
+			break
 
 def play_sound():
 	if Data.media_source == None:
@@ -537,12 +544,12 @@ def script_properties():
 	obs.obs_properties_add_int_slider(Data.props,
 		'animation_delay',
 		Data.lang.t('animation_delay'),
-		1, 200, 2)
+		1, 200, 1)
 
 	obs.obs_properties_add_int_slider(Data.props,
 		'animation_deceleration',
 		Data.lang.t('animation_deceleration'),
-		0, 1000, 50)
+		1, 200, 1)
 
 	# Sound settings
 	######################################
