@@ -83,7 +83,7 @@ class Phrase_Randomizer:
 			list_len = len(self._lists[list_name])
 			if index is None:
 				index = randint(0, list_len)
-			phrase = phrase.replace(f'{{{position}}}', self._lists[list_name][index % list_len], 1)
+			phrase = phrase.replace(f'{{{position}}}', self._lists[list_name][int(index) % int(list_len)], 1)
 		return phrase
 
 
