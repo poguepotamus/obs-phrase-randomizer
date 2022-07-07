@@ -86,7 +86,6 @@ class Phrase_Randomizer:
 			phrase = phrase.replace(f'{{{position}}}', self._lists[list_name][int(index) % int(list_len)], 1)
 		return phrase
 
-
 	def _load_list(self, list_name:str):
 		''' Loads a list from the file
 
