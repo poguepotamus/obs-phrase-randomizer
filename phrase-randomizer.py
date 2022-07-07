@@ -111,7 +111,6 @@ class Phrase_Randomizer:
 		except FileNotFoundError as e:
 			raise FileNotFoundError(f'Unable to find list `{list_file_path}`.') from e
 
-
 	def get_random_phrases(self, count:int=1) -> list:
 		''' Return a list of random phrases.
 
