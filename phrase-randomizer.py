@@ -485,7 +485,7 @@ def script_update(settings):
 
 	# Gathering our phrases
 	Data.phrases = obs.obs_data_get_string(settings, 'phrases').splitlines()
-	Data.phrases = [phrase.strip().replace('\\n', '\n') for phrase in Data.phrases]
+	Data.phrases = [phrase.strip().replace('\\n', '\n') for phrase in Data.phrases] # The list comp here is replacing the literal '\n' in the phrases with a newline char
 	# Removing empty strings from list
 	if '' in Data.phrases:
 		Data.phrases.remove('')
