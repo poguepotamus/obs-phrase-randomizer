@@ -616,12 +616,12 @@ def script_properties():
 	# Inputs
 	######################################
 	obs.obs_properties_add_button(Data.props,
-		'button',
+		'phrase_generate_button',
 		Data.lang.t('get_random'),
 		on_click_get_random_phrase)
 
 	obs.obs_properties_add_button(Data.props,
-		'button2',
+		'clear_cache_button',
 		Data.lang.t('clear_cache'),
 		on_click_clear_cache)
 
