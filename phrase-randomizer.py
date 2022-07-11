@@ -3,6 +3,8 @@
 '''
 Script written for the intention to be used to randomize phrases with variable inputs.
 
+For the extent of reading this, OBS writes print statments to a seperate log, so we don't setup logging statements as it's all handled by OBS for us.
+
 Relalvent pages:
 	- Official OBS scriping page: https://github.com/obsproject/obs-studio/wiki/Getting-Started-With-OBS-Scripting
 	- Community made python scripting cheat sheet: https://github.com/upgradeQ/OBS-Studio-Python-Scripting-Cheatsheet-obspython-Examples-of-API
