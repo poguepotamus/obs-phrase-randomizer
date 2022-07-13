@@ -34,12 +34,28 @@ AVAILABLE_LANGUAGES = ['en']
 ########################################
 
 class Phrase_Randomizer:
-	def __init__(self, list_directory:Path):
+	''' A phrase randomizer used to generate random phrases from a master phrase list.
+
+	Phrases can have a code to be replaced by information from any available list.
+
+	Attributes:
+		_lists_dir(Path): Directory in which to look for lists.
+		_lists({str:[str]}: A dictionary of names to lists of strings to fill variables in phrases.
+			i.e. if a phrase contains '{p}', a string from the list in _lists['p'] replaces '{p}' in the phrase.
+
+		_phrases_master([str]): A public copy of the phrases. This isn't manipulated in the same way that _phrases is.
+		_phrases([str]): A list of strings that is the master phrases. Phrases will be removed from this list if requested.
+
+		_phrase_duplication(bool): Tells the class if we should remove phrases after they have been chosen.
+
+		_min_phrase_count(int=2): The minimum number of phrases that can be in the working phrase list. Once it drops below this level, the phrases will be repopulated.
+	'''
+
+	def __init__(self, list_directory:Path) -> None:
 		''' A tool for filling phrases with random information provided by list files.
 
 		Arguments:
 			list_directory: Directory to look for our lists.
-
 		'''
 		self._lists_dir = list_directory
 		self._phrases = []
