@@ -418,11 +418,11 @@ class OBS_Source:
 			'text': new_text
 		})
 
-	def set_opacity(self, opacity:float=0):
+	def set_opacity(self, opacity:int=0):
 		''' Convinence function to quickly update the opacity. Utalizes obs_source.set_data().
 
 		Arguments:
-			opacity(float=0): The new opacity of the source.
+			opacity(int=0): The new opacity of the source from 0 to 100.
 		'''
 		self.set_data({
 			'opacity': opacity
