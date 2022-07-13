@@ -282,9 +282,10 @@ class Data:
 	animation_deceleration = 52
 
 	# Sound settings
-	sound_enabled = False
-	sound_path = SCRIPT_DIRECTORY / 'sounds' / 'alert.mp3'
-	media_source = None # Null pointer
+	start_sound_enabled = False
+	start_sound_path    = SCRIPT_DIRECTORY / 'sounds' / 'wheel.mp3'
+	end_sound_enabled   = False
+	end_sound_path      = SCRIPT_DIRECTORY / 'sounds' / 'alert.mp3'
 	output_index = 63 # Last index
 
 	@staticmethod
@@ -487,6 +488,13 @@ def source_randomize_text():
 	'''
 	print('Randomizing source text')
 
+	# Removing any callback to the delayed hide for our source
+	obs.timer_remove(source_delayed_hide)
+
+	# Playing our start sound
+	if Data.start_sound_enabled:
+		play_sound(Data.start_sound_path)
+
 	# Opening our source
 	with OBS_Source(Data.source_name) as source:
 
@@ -511,23 +519,29 @@ def source_randomize_text():
 			obs.timer_add(source_delayed_hide, Data.phrase_lifetime)
 
 	# Playing sound if requested
-	if Data.sound_enabled:
-		play_sound()
+	if Data.end_sound_enabled:
+		play_sound(Data.end_sound_path)
 
-def play_sound():
-	if Data.media_source == None:
-		Data.media_source = obs.obs_source_create_private(
-			'ffmpeg_source', 'Global Media Source', None
-		)
-	s = obs.obs_data_create()
-	obs.obs_data_set_string(s, 'local_file', Data.sound_path)
-	obs.obs_source_update(Data.media_source, s)
-	obs.obs_source_set_monitoring_type(
-		Data.media_source, obs.OBS_MONITORING_TYPE_MONITOR_AND_OUTPUT
+def play_sound(sound_path):
+	# Creating a source and the data for the source with the sound's path
+	sound_source = obs.obs_source_create_private(
+		'ffmpeg_source', 'Global Media Source', None
 	)
-	obs.obs_data_release(s)
+	sound_data = obs.obs_data_create_from_json(dumps({
+		'local_file': sound_path
+	}))
 
-	obs.obs_set_output_source(Data.output_index, Data.media_source)
+	# Updating our source, and setting a monitoring type for playing
+	obs.obs_source_update(sound_source, sound_data)
+	obs.obs_source_set_monitoring_type(
+		sound_source, obs.OBS_MONITORING_TYPE_MONITOR_AND_OUTPUT
+	)
+	obs.obs_set_output_source(Data.output_index, sound_source)
+
+	# Releasing our source and our data
+	obs.obs_source_release(sound_source)
+	obs.obs_data_release(sound_data)
+
 
 
 # Event methods
@@ -617,8 +631,10 @@ def script_defaults(settings):
 	obs.obs_data_set_default_int(  settings, 'animation_deceleration', Data.animation_deceleration)
 
 	# Sound settings defaults
-	obs.obs_data_set_default_bool(  settings, 'sound_enabled', Data.sound_enabled)
-	obs.obs_data_set_default_string(settings, 'sound_path',    str(Data.sound_path))
+	obs.obs_data_set_default_bool(  settings, 'start_sound_enabled', Data.start_sound_enabled)
+	obs.obs_data_set_default_string(settings, 'start_sound_path',    str(Data.start_sound_path))
+	obs.obs_data_set_default_bool(  settings, 'end_sound_enabled',   Data.end_sound_enabled)
+	obs.obs_data_set_default_string(settings, 'end_sound_path',      str(Data.end_sound_path))
 
 
 def script_description():
@@ -672,8 +688,10 @@ def script_update(settings):
 	Data.animation_delay        = obs.obs_data_get_int( settings, 'animation_delay')
 
 	# Getting sound settings
-	Data.sound_enabled = obs.obs_data_get_bool(  settings, 'sound_enabled')
-	Data.sound_path    = obs.obs_data_get_string(settings, 'sound_path')
+	Data.start_sound_enabled = obs.obs_data_get_bool(  settings, 'start_sound_enabled')
+	Data.start_sound_path    = obs.obs_data_get_string(settings, 'start_sound_path')
+	Data.end_sound_enabled   = obs.obs_data_get_bool(  settings, 'end_sound_enabled')
+	Data.end_sound_path      = obs.obs_data_get_string(settings, 'end_sound_path')
 
 	# Updating our randomizer
 	Data.Randomizer.set_phrase_list(Data.phrases)
@@ -788,12 +806,23 @@ def script_properties():
 	# Sound settings
 	######################################
 	obs.obs_properties_add_bool(Data.props,
-		'sound_enabled',
-		Data.lang.t('sound_enabled'))
+		'start_sound_enabled',
+		Data.lang.t('start_sound_enabled'))
 
 	obs.obs_properties_add_path(Data.props,
-		'sound_path',
-		Data.lang.t('sound_path'),
+		'start_sound_path',
+		Data.lang.t('start_sound_path'),
+		obs.OBS_PATH_FILE,
+		'audio',
+		str(SCRIPT_DIRECTORY))
+
+	obs.obs_properties_add_bool(Data.props,
+		'end_sound_enabled',
+		Data.lang.t('end_sound_enabled'))
+
+	obs.obs_properties_add_path(Data.props,
+		'end_sound_path',
+		Data.lang.t('end_sound_path'),
 		obs.OBS_PATH_FILE,
 		'audio',
 		str(SCRIPT_DIRECTORY))
