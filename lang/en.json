@@ -6,6 +6,7 @@
     "lists_dir": "Lists folder",
     "source": "Source",
     "phrase_lifetime": "Phrase lifetime",
+    "animation_phrase_count": "Dummy phrase count",
     "animation_enabled": "Enable animation",
     "animation_length": "Animation length (s)",
     "animation_delay": "Animation delay (ms)",
