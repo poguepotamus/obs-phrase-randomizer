@@ -287,6 +287,35 @@ class Data:
 	media_source = None # Null pointer
 	output_index = 63 # Last index
 
+	@staticmethod
+	def save_settings():
+		''' Saves settings to the SCRIPT_SETTINGS file into Data.settings.
+		'''
+		# Checking if we have settings to save
+		if Data.settings:
+			# Attempting to write out settings
+			try:
+				with open(SCRIPT_SETTINGS_FILE, 'w', encoding='utf-8') as settings_file:
+					settings_file.write(obs.obs_data_get_json(Data.settings))
+			except Exception as e:
+				print(e, f'Unable to save settings to `{SCRIPT_SETTINGS_FILE}`')
+		print(f'Settings file `{SCRIPT_SETTINGS_FILE}` updated.')
+
+	@staticmethod
+	def load_settings():
+		''' Load settings from the SCRIPT_SETTINGS file into Data.settings.
+		'''
+		if SCRIPT_SETTINGS_FILE.is_file():
+			# If our settinsg exist, we load the file
+			with open(SCRIPT_SETTINGS_FILE, 'r', encoding='utf-8') as settings_file:
+				Data.settings = obs.obs_data_create_from_json(settings_file.read())
+
+			# If our language exists in our settings file, we load that language
+			lang_code = obs.obs_data_get_string(Data.settings, 'lang')
+			if lang_code:
+				Data.lang_code = lang_code
+				Data.lang = Lang(lang_code)
+
 
 # ------------------------------------------------------------
 
@@ -497,34 +526,6 @@ def play_sound():
 
 	obs.obs_set_output_source(Data.output_index, Data.media_source)
 
-def save_settings():
-	''' Saves settings to the SCRIPT_SETTINGS file into Data.settings.
-	'''
-	# Checking if we have settings to save
-	if Data.settings:
-		# Attempting to write out settings
-		try:
-			with open(SCRIPT_SETTINGS_FILE, 'w', encoding='utf-8') as settings_file:
-				settings_file.write(obs.obs_data_get_json(Data.settings))
-		except Exception as e:
-			print(e, f'Unable to save settings to `{SCRIPT_SETTINGS_FILE}`')
-	print(f'Settings file `{SCRIPT_SETTINGS_FILE}` updated.')
-
-def load_settings():
-	''' Load settings from the SCRIPT_SETTINGS file into Data.settings.
-	'''
-	if SCRIPT_SETTINGS_FILE.is_file():
-		# If our settinsg exist, we load the file
-		with open(SCRIPT_SETTINGS_FILE, 'r', encoding='utf-8') as settings_file:
-			Data.settings = obs.obs_data_create_from_json(settings_file.read())
-
-		# If our language exists in our settings file, we load that language
-		lang_code = obs.obs_data_get_string(Data.settings, 'lang')
-		if lang_code:
-			Data.lang_code = lang_code
-			Data.lang = Lang(lang_code)
-
-
 
 # Event methods
 ########################################
@@ -559,7 +560,7 @@ def on_click_update_phrases():
 # ------------------------------------------------------------
 
 hotkey_get_random = HotkeyStore()
-load_settings()
+Data.load_settings()
 
 # ------------------------------------------------------------
 
@@ -657,7 +658,7 @@ def script_update(settings):
 	Data.Randomizer.set_lists_dir(Data.lists_dir)
 
 	# Saving our settings to file
-	save_settings()
+	Data.save_settings()
 
 
 def script_save(_):
@@ -666,7 +667,7 @@ def script_save(_):
 	https://obsproject.com/docs/scripting.html#script_save
 	'''
 	hotkey_get_random.htk_copy.save_hotkey()
-	save_settings()
+	Data.save_settings()
 
 
 def script_properties():
