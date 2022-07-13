@@ -14,5 +14,6 @@
     "sound_enabled": "Play sound at result",
     "sound_path": "Sound file path",
     "get_random": "Generate random phrase",
+    "show_phrase": "Show phrase again",
     "clear_cache": "Clear list cache"
 }

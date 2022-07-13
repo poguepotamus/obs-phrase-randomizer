@@ -475,7 +475,7 @@ def source_delayed_hide():
 
 	# Setting our source opacity to 0
 	with OBS_Source(Data.source_name) as source:
-		source.set_text('')
+		source.set_opacity(0)
 
 def source_randomize_text():
 	''' Updates the text displayed in the source.
@@ -489,6 +489,9 @@ def source_randomize_text():
 
 	# Opening our source
 	with OBS_Source(Data.source_name) as source:
+
+		# Making our source visible again
+		source.set_opacity(100)
 
 		# Displaying our animation if requested
 		if Data.animation_enabled:
@@ -544,6 +547,23 @@ def on_hotkey_get_random_phrase(pressed):
 	if pressed:
 		on_click_get_random_phrase()
 
+def on_click_show_phrase_again(_=None, __=None):
+	''' Shows phrase again for phrase lifetime.
+	'''
+	print('Showing phrase again')
+	# Displaying our phrase
+	with OBS_Source(Data.source_name) as source:
+		source.set_opacity(100)
+
+	# Hiding our phrase after phrase lifetime
+	obs.timer_add(source_delayed_hide, Data.phrase_lifetime)
+
+def on_hotkey_show_phrase_again(pressed):
+	''' On hotkey, shows phrase again for the phrase lifetime
+	'''
+	if pressed:
+		on_click_show_phrase_again()
+
 def on_click_clear_cache(_, __):
 	''' Clearing our list cache
 	'''
@@ -560,6 +580,7 @@ def on_click_update_phrases():
 # ------------------------------------------------------------
 
 hotkey_get_random = HotkeyStore()
+hotkey_show_phrase = HotkeyStore()
 Data.load_settings()
 
 # ------------------------------------------------------------
@@ -609,7 +630,8 @@ def script_description():
 def script_load(settings):
 	''' Called for one-time init using values of data settings
 	'''
-	hotkey_get_random.htk_copy = Hotkey(on_hotkey_get_random_phrase, settings, 'get_random_text', Data.lang.t('get_random'))
+	hotkey_get_random.htk_copy  = Hotkey(on_hotkey_get_random_phrase, settings, 'get_random_text', Data.lang.t('get_random'))
+	hotkey_show_phrase.htk_copy = Hotkey(on_hotkey_show_phrase_again, settings, 'show_phrase_again', Data.lang.t('show_phrase'))
 
 
 def script_update(settings):
@@ -782,6 +804,11 @@ def script_properties():
 		'phrase_generate_button',
 		Data.lang.t('get_random'),
 		on_click_get_random_phrase)
+
+	obs.obs_properties_add_button(Data.props,
+		'phrase_show_again',
+		Data.lang.t('show_phrase'),
+		on_click_show_phrase_again)
 
 	obs.obs_properties_add_button(Data.props,
 		'clear_cache_button',
