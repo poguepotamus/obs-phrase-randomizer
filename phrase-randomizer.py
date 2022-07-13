@@ -17,7 +17,7 @@ Author: Matthew Pogue - matthewpogue606+phraseRandomizer@gmail.com
 from pathlib import Path
 from time import sleep
 from random import shuffle, randint, choice as random_choice
-import json
+from json import loads, dumps
 
 # OBS - This isn't on pipy, so it can't be installed. Adding the comment will remove it from pylance
 import obspython as obs # type: ignore
@@ -58,10 +58,16 @@ class Phrase_Randomizer:
 			list_directory: Directory to look for our lists.
 		'''
 		self._lists_dir = list_directory
-		self._phrases = []
 		self._lists   = {}
 
-	def _fill_phrase(self, phrase:str):
+		self._phrases_master = []
+		self._phrases        = self._phrases_master
+
+		self._phrase_duplication = True
+
+		self._min_phrase_count = 2
+
+	def _fill_phrase(self, phrase:str) -> None:
 		''' Fills a single phrase with variables from all the lists.
 
 		Arguments:
@@ -104,7 +110,7 @@ class Phrase_Randomizer:
 			phrase = phrase.replace(f'{{{position}}}', self._lists[list_name][int(index) % int(list_len)], 1)
 		return phrase
 
-	def _load_list(self, list_name:str):
+	def _load_list(self, list_name:str) -> None:
 		''' Loads a list from the file
 
 		Will look in the self._lists_directory for the list_name.
@@ -128,8 +134,10 @@ class Phrase_Randomizer:
 		except FileNotFoundError as e:
 			raise FileNotFoundError(f'Unable to find list `{list_file_path}`.') from e
 
-	def get_random_phrases(self, count:int=1) -> list:
-		''' Return a list of random phrases.
+	def get_dummy_phrases(self, count:int=1) -> list:
+		''' Return a list of random filled phrases.
+
+		This will not remove phrases even if the setting is on. You must use get_filled_phrase for that.
 
 		Arguments:
 			count(int=1): Number of phrases to generate
@@ -137,8 +145,6 @@ class Phrase_Randomizer:
 		Returns:
 			List of generated phrases
 		'''
-		print(f'Getting {count} random phrases')
-		print(self._phrases)
 		phrases = []
 		for _ in range(count):
 			filled_phrase = self._fill_phrase(random_choice(self._phrases))
@@ -146,16 +152,44 @@ class Phrase_Randomizer:
 
 		return phrases
 
+	def get_filled_phrase(self) -> str:
+		''' Return a single phrase that has been populated with list information.
 
-	def set_phrase_list(self, phrase_list:list):
+		Will remove phrase from working phrase list if setting is on.
+		'''
+		shuffle(self._phrases)
+		phrase = self._fill_phrase(self._phrases[0])
+
+		# Removing phrase if requested
+		if self._phrase_duplication is False:
+			print('removing a phrase')
+			del self._phrases[0]
+			# Checking if our phrases are running low and repopulating if needed
+			if len(self._phrases) < self._min_phrase_count:
+				self.update_phrases()
+
+		# Returning our phrase
+		print(f'Current phrases:\n{self._phrases}')
+		return phrase
+
+	def set_phrase_list(self, phrase_list:list) -> None:
 		''' Updates the randomizers' copy of the phrase list.
+
+		If the length of this is the same or less than our _min_phrase_count, then this will throw a value error.
 
 		Arguments:
 			phrase_list(list:str): A list of phrases from the user.
 		'''
-		self._phrases = phrase_list
+		# First, we check for length
+		if len(phrase_list) <= self._min_phrase_count:
+			raise ValueError(f'Phrase list must include more than {self._min_phrase_count} phrases.')
 
-	def set_lists_dir(self, lists_dir:Path):
+		self._phrases_master = phrase_list
+
+		# Now we need to update our working phrase lists
+		self.update_phrases()
+
+	def set_lists_dir(self, lists_dir:Path) -> None:
 		''' Updates the path in whci to search for lists.
 
 		Arguments:
@@ -164,17 +198,33 @@ class Phrase_Randomizer:
 		print(f'setting our new lists directory to `{Data.lists_dir}')
 		self._lists_dir = Path(lists_dir).resolve()
 
-	def clear_list_cache(self):
+	def clear_list_cache(self) -> None:
 		''' Forces a clear of the list cache. Useful if you've updated a list while the script has been launched and seen the list.
 		'''
 		self._lists = {}
 
-	# def eager_load_lists(self):
-		''' A function to increase performance during processing-intense moments.
-
-		This forces the class to load all lists in the list directory to prevent having to look for them during runtime.
+	def set_phrase_duplication(self, phrase_duplication:bool=True) -> None:
+		''' Configures the randomizer to give duplicated phrases. If this is set to false, an internal list of phrases are used to remove phrases from.
 		'''
-		#@TODO Impliment list eager loading
+		print(f'Updating phrase duplication to {phrase_duplication}')
+		self._phrase_duplication = phrase_duplication
+
+		# Now we need to update our phrase lists
+		self.update_phrases()
+
+	def update_phrases(self) -> None:
+		''' Updates the working copy of phrases with our master list.
+
+		Typically used when we're changing our phrase duplication setting, or updating our phrases master list.
+		'''
+		# If we're duplicating, we're just setting our internal list as a pointer to our external list
+		if self._phrase_duplication:
+			self._phrases = self._phrases_master
+
+		# Otherwise, we're going to copy our phrases
+		else:
+			self._phrases = self._phrases_master.copy()
+
 
 # Language class to help manage language translation
 ########################################
@@ -192,7 +242,7 @@ class Lang:
 
 		# Otherwise, we load our messages from that language file
 		with open(lang_file, 'r', encoding='utf-8') as language_file:
-			self.messages = json.loads(language_file.read())
+			self.messages = loads(language_file.read())
 
 	def t(self, key:str):
 		''' Translate function to provide a message from the given key
@@ -218,6 +268,7 @@ class Data:
 	lang = Lang(lang_code)
 
 	phrases = []
+	phrases_unique = False
 	source_name = ''
 	phrase_lifetime = 8000
 	lists_dir = SCRIPT_DIRECTORY / 'lists'
@@ -225,6 +276,7 @@ class Data:
 
 	# Animation Settings
 	animation_enabled      = True
+	animation_phrase_count = 12
 	animation_length       = 4
 	animation_delay        = 52
 	animation_deceleration = 52
@@ -276,88 +328,159 @@ class HotkeyStore:
 
 # ------------------------------------------------------------
 
-def update_text(phrases:list):
-	''' Updates the text displayed in the source
+class OBS_Source:
+	def __init__(self, source_name:str):
+		self.source_name = source_name
+		self._obs_source = None
+
+	def __enter__(self):
+		''' Custom magic methods for using an obs source. Checks for a valid reference.
+
+		This will get a reference to ths source using the proper methods, as well as create dummy data for you to fill. See class methods for more details.
+
+		This defaults to opening the source with the name in Data.source_name.
+		'''
+		self._obs_source = obs.obs_get_source_by_name(self.source_name)
+
+		if self._obs_source is None:
+			raise Exception(f'Could not find source with name {self.source_name}')
+
+		return self
+
+	def __exit__(self, _, __, ___):
+		''' Closing statement for keyword 'with' usage. See self.__enter__ for more details.
+		'''
+		obs.obs_source_release(self._obs_source)
+		self._obs_source = None
+
+	def _check_source(self):
+		''' Checks if we have a valid source. If we don't, this function raises a ValueError detailing that we don't have a valid source set.
+
+		This can be called at the beginning of methods that require a valid source, or this class to be used with the 'with' keyword.
+		'''
+		if self._obs_source is None:
+			raise ValueError('No source found. Please make sure that there is a referenced source and that the source is opened using `with`')
+
+	def set_data(self, data:dict):
+		''' Updates the data of the source. this is a general use function to update obs sources.
+
+		Arguments:
+			data(dict): Dictionary in JSON style that will correlate with data in the source you wish to alter.
+		'''
+		# First, we check if we have a valid source
+		self._check_source()
+
+		# Creating a dataset with our dictionary
+		source_data = obs.obs_data_create_from_json(dumps(data))
+
+		# We'll attempt to update our source. Doing this in a try as we need to release reference to data if there is an issue.
+		try:
+			obs.obs_source_update(self._obs_source, source_data)
+		finally:
+			obs.obs_data_release(source_data)
+
+	def set_text(self, new_text:str=''):
+		''' Convinence function to quickly update the text. Utalizes obs_source.set_data().
+
+		Arguments:
+			new_text(str=''): String that contains the new text. This defaults to an emptry string to remove text data from the source.
+		'''
+		self.set_data({
+			'text': new_text
+		})
+
+	def set_opacity(self, opacity:float=0):
+		''' Convinence function to quickly update the opacity. Utalizes obs_source.set_data().
+
+		Arguments:
+			opacity(float=0): The new opacity of the source.
+		'''
+		self.set_data({
+			'opacity': opacity
+		})
+
+
+	def text_animation(self, length:float, deceleration_scale:float, text_list:list):
+		''' Plays a budget text animation by changing the source's text value with a delay following the slope of a cubic.
+
+		I've played around with this function for many an hour to perfect. I've landed on a cubic function modeled by this wolframapha link.
+		https://www.wolframalpha.com/input?i=52+*+%28x+%2F+8000+*+2%29+%5E+%281%2F4%29
+		Where deceleration_scale is 52 and length is 8000 (8 seconds)
+		This functions always starts with very fast delays and slows down as the index increases.
+
+		Arguments:
+			length(float): The length of the animation in ms.
+			deceleration_scale(float): The scale at which to decelerate.
+			text_list(list): A list of text to use as text examples in animation. Length must be more than 1.
+		'''
+		print('Playing animation')
+		animation_length = length
+
+		# Raising an error if our list is not less than 1
+		num_texts = len(text_list)
+		if not num_texts > 1:
+			raise ValueError('Size of text_list must be more than 1')
+
+		# Playing our animation. Capping our animation after 800 loops to prevent an infinite loop
+		for deceleration_index in range(1, 400):
+			anim_delay = (deceleration_index ** 4) / (animation_length * deceleration_scale)
+
+			# Sleeping, then continuing if we have time remaining
+			length = length - anim_delay
+			sleep(anim_delay / 1000)
+
+			# Displaying a random phrase unless our time is too short
+			if length < 0:
+				break
+
+			# Setting our text
+			self.set_text(
+				text_list[deceleration_index % num_texts]
+			)
+
+def source_delayed_hide():
+	''' Hides the source immediatly, but is de-referenced from obs-source to allow for the use of timers.
 	'''
-	print('Updating text')
+	# Removing any timers for this method
+	obs.remove_current_callback()
 
-	# Getting reference to our source and some example data
-	source      = obs.obs_get_source_by_name(Data.source_name)
-	source_data = obs.obs_data_create()
+	# Setting our source opacity to 0
+	with OBS_Source(Data.source_name) as source:
+		source.set_text('')
 
-	# If our source is invalid, we're going to do absolutely nothing
-	if source is None:
-		raise Exception(f'Source `{Data.source_name}` not found')
+def source_randomize_text():
+	''' Updates the text displayed in the source.
 
-	# Displaying our animation if requested
-	print('Playing animation')
-	if Data.animation_enabled:
-		play_animation(source_data, source, phrases)
+	This uses the phrase randomizer to generate the phrases used in the animation as well as the chosen phrase.
 
-	# Displaying just the value if requested
-	else:
-		phrase = random_choice(phrases)
-		print(f'Setting text to {phrase}')
-		obs.obs_data_set_string(source_data, 'text', phrase)
-		obs.obs_source_update(source, source_data)
+	This function is also in charge of removing the phrase from our internal list if requested.
 
-	# Settings a timer to remove text after delay
-	if Data.phrase_lifetime != 0:
-		obs.timer_add(clear_source_text, Data.phrase_lifetime)
+	'''
+	print('Randomizing source text')
 
-	# Reasing access to our data and source now that we're done
-	obs.obs_data_release(source_data)
-	obs.obs_source_release(source)
+	# Opening our source
+	with OBS_Source(Data.source_name) as source:
+
+		# Displaying our animation if requested
+		if Data.animation_enabled:
+			source.text_animation(
+				Data.animation_length * 1000, # In seconds
+				Data.animation_deceleration,
+				Data.Randomizer.get_dummy_phrases(Data.animation_phrase_count)
+			)
+
+		# Displaying value requested as the final result reguardless if we have an animation
+		phrase = Data.Randomizer.get_filled_phrase()
+		print(f'Setting final text to {phrase}')
+		source.set_text(phrase)
+
+		# Settings a timer to remove text after delay
+		if Data.phrase_lifetime != 0:
+			obs.timer_add(source_delayed_hide, Data.phrase_lifetime)
 
 	# Playing sound if requested
 	if Data.sound_enabled:
 		play_sound()
-
-def play_animation(source_data, source, phrases):
-	print('Playing animation')
-	# Some values for easy reference
-	anim_delay        = Data.animation_delay / 1000 # in ms
-	anim_deceleration = Data.animation_deceleration / 1000 # in ms
-	anim_length       = Data.animation_length + anim_delay
-
-	deceleration_index = 1
-	while anim_length > 0:
-		# Sleeping, then continuing if we have time remaining
-		anim_length = anim_length - anim_delay
-		sleep(anim_delay)
-
-		# Displaying a random phrase
-		obs.obs_data_set_string(source_data, 'text', phrases[deceleration_index % len(phrases)])
-		obs.obs_source_update(source, source_data)
-
-		# Calculating how much sleep time, decel, and the remaining time for our animation.
-		''' I've spent quite a bit on this animation function. This is a cubic function that is scaled by the animation length. This keeps the animation smooth reguardless the time. If you find something better please submit a pull request :)
-		'''
-		anim_delay = anim_deceleration * (deceleration_index / anim_length * 2) ** (1/4) # Cubic root
-		deceleration_index += 1
-
-		# Killing after 200 iterations just in case
-		if deceleration_index > 200:
-			break
-
-
-def clear_source_text():
-	# We start by stopping the timer that called this function so that it doesn't get called again
-	obs.remove_current_callback()
-
-	# Getting reference to our source and some example data
-	source      = obs.obs_get_source_by_name(Data.source_name)
-	source_data = obs.obs_data_create()
-
-	# Displaying a random phrase
-	obs.obs_data_set_string(source_data, 'text', '')
-	# obs.obs_data_set_double(source_data, 'opacity', 0)
-	obs.obs_source_update(source, source_data)
-
-	# Reasing access to our data and source now that we're done
-	obs.obs_data_release(source_data)
-	obs.obs_source_release(source)
-
 
 def play_sound():
 	if Data.media_source == None:
@@ -373,10 +496,6 @@ def play_sound():
 	obs.obs_data_release(s)
 
 	obs.obs_set_output_source(Data.output_index, Data.media_source)
-
-
-
-
 
 def save_settings():
 	''' Saves settings to the SCRIPT_SETTINGS file into Data.settings.
@@ -407,17 +526,15 @@ def load_settings():
 
 
 
-# Events
+# Event methods
 ########################################
 
 def on_click_get_random_phrase(_=None, __=None):
 	''' When someone clicks the random button on the Scripts settings menu
 	'''
 	print('Random phrase button pressed')
-	# Generate random phrases
-	phrases = Data.Randomizer.get_random_phrases(14)
-	# Update the text with the phrase
-	update_text(phrases)
+	# Updates the text
+	source_randomize_text()
 
 def on_hotkey_get_random_phrase(pressed):
 	''' When someone hits the hotkey to generate the random phrase
@@ -430,6 +547,14 @@ def on_click_clear_cache(_, __):
 	''' Clearing our list cache
 	'''
 	Data.Randomizer.clear_list_cache()
+
+def on_click_update_phrases():
+	''' Updates our internal phrases list when this button is pressed.
+
+	This lets up keep two phrase lists when phrase_duplication is unchecked.
+	'''
+	# The randomizer handles all the phrase duplication, so we call their helper function
+	Data.Randomizer.update_phrases()
 
 # ------------------------------------------------------------
 
@@ -457,19 +582,21 @@ def script_defaults(settings):
 	obs.obs_data_set_default_string(settings, 'lang', 'en')
 
 	# Phrases section
-	obs.obs_data_set_default_string(settings, 'phrases', 'Each\nLine\nis\na\nPhrase')
+	obs.obs_data_set_default_string(settings, 'phrases_list',    'Each\nLine\nis\na\nPhrase')
+	obs.obs_data_set_default_bool(  settings, 'phrases_unique',  Data.phrases_unique)
 	obs.obs_data_set_default_int(   settings, 'phrase_lifetime', Data.phrase_lifetime)
-	obs.obs_data_set_default_string(settings, 'lists_dir', str(Data.lists_dir))
+	obs.obs_data_set_default_string(settings, 'lists_dir',       str(Data.lists_dir))
 
 	# Animation settings defaults
 	obs.obs_data_set_default_bool( settings, 'animation_enabled',      Data.animation_enabled)
+	obs.obs_data_set_default_int(  settings, 'animation_phrase_count', Data.animation_phrase_count)
 	obs.obs_data_set_default_int(  settings, 'animation_delay',        Data.animation_delay)
 	obs.obs_data_set_default_int(  settings, 'animation_length',       Data.animation_length)
 	obs.obs_data_set_default_int(  settings, 'animation_deceleration', Data.animation_deceleration)
 
 	# Sound settings defaults
 	obs.obs_data_set_default_bool(  settings, 'sound_enabled', Data.sound_enabled)
-	obs.obs_data_set_default_string(settings, 'sound_path', str(Data.sound_path))
+	obs.obs_data_set_default_string(settings, 'sound_path',    str(Data.sound_path))
 
 
 def script_description():
@@ -506,12 +633,17 @@ def script_update(settings):
 	if '' in Data.phrases:
 		Data.phrases.remove('')
 
+	# User is requesting that we don't duplicate phrases
+	Data.phrases_unique = obs.obs_data_get_bool(settings, 'phrases_unique')
+	Data.Randomizer.set_phrase_duplication(not Data.phrases_unique)
+
 	# Lists folder and phrase lifetime
 	Data.phrase_lifetime = obs.obs_data_get_int(   settings, 'phrase_lifetime')
 	Data.lists_dir       = obs.obs_data_get_string(settings, 'lists_dir')
 
 	# Getting animation settings
 	Data.animation_enabled      = obs.obs_data_get_bool(settings, 'animation_enabled')
+	Data.animation_phrase_count = obs.obs_data_get_int( settings, 'animation_phrase_count')
 	Data.animation_deceleration = obs.obs_data_get_int( settings, 'animation_deceleration')
 	Data.animation_length       = obs.obs_data_get_int( settings, 'animation_length')
 	Data.animation_delay        = obs.obs_data_get_int( settings, 'animation_delay')
@@ -583,6 +715,15 @@ def script_properties():
 		Data.lang.t('Phrases'),
 		obs.OBS_TEXT_MULTILINE)
 
+	obs.obs_properties_add_button(Data.props,
+		'phrase_update_button',
+		Data.lang.t('phrases_update'),
+		on_click_update_phrases)
+
+	obs.obs_properties_add_bool(Data.props,
+		'phrases_unique',
+		Data.lang.t('phrases_unique'))
+
 	obs.obs_properties_add_int_slider(Data.props,
 		'phrase_lifetime',
 		Data.lang.t('phrase_lifetime'),
@@ -600,6 +741,11 @@ def script_properties():
 	obs.obs_properties_add_bool(Data.props,
 		'animation_enabled',
 		Data.lang.t('animation_enabled'))
+
+	obs.obs_properties_add_int_slider(Data.props,
+		'animation_phrase_count',
+		Data.lang.t('animation_phrase_count'),
+		2, 80, 1)
 
 	obs.obs_properties_add_int_slider(Data.props,
 		'animation_length',

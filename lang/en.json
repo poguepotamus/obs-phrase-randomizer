@@ -1,6 +1,8 @@
 {
     "description": "An OBS script to show random phrases from a list filled with phrases from other lists.",
     "phrases": "Phrases",
+    "phrases_unique": "Only produce unique phrases",
+    "phrases_update": "Update internal phrase list",
     "lists_dir": "Lists folder",
     "source": "Source",
     "phrase_lifetime": "Phrase lifetime",
