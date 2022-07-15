@@ -94,6 +94,7 @@ Below is a small description of all the script settings. Default values can be f
 > ![Sound and MISC settings section](docs/section_sound_and_misc.png)
 
 - __Shuffle variables seperately__: Will play a seperate animation for shuffling the list values. The first animation will pull from the list of internal phrases with the wildcards intact i.e. `{p}`. Once a phrase is chosen, another animation will play with many variations of that phrase but with different randomizations of the list values.
+	![Example of shuffling list variables seperatly](docs/seperate_variables_example.gif)
 - __Length between animations__: Duration, in ms, that will seperate the two animations if 'shuffle variables seperately' is checked.
 - __All Sound Settings__: Enables sounds playing at the start and end of the animation. Will play for both animations. Start sound will play even if animation isn't enabled. Browse to a custom audio file or use the ones included.
 - __Generate random phrase__: Manual button to generate a random phrase. There is also a hotkey that can be registered with the same name.
