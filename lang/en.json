@@ -11,8 +11,10 @@
     "animation_length": "Animation length (s)",
     "animation_delay": "Animation delay (ms)",
     "animation_deceleration": "Animation deceleration",
-    "sound_enabled": "Play sound at result",
-    "sound_path": "Sound file path",
+    "start_sound_enabled": "Play sound when shuffling",
+    "start_sound_path": "Start sound path",
+    "end_sound_enabled": "Play sound at result",
+    "end_sound_path": "End sound path",
     "get_random": "Generate random phrase",
     "show_phrase": "Show phrase again",
     "clear_cache": "Clear list cache"
