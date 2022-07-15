@@ -67,7 +67,7 @@ class Phrase_Randomizer:
 
 		self._min_phrase_count = 2
 
-	def _fill_phrase(self, phrase:str) -> None:
+	def fill_phrase(self, phrase:str) -> None:
 		''' Fills a single phrase with variables from all the lists.
 
 		Arguments:
@@ -134,31 +134,40 @@ class Phrase_Randomizer:
 		except FileNotFoundError as e:
 			raise FileNotFoundError(f'Unable to find list `{list_file_path}`.') from e
 
-	def get_dummy_phrases(self, count:int=1) -> list:
+	def get_dummy_phrases(self, count:int=1, filled:bool=True) -> list:
 		''' Return a list of random filled phrases.
 
 		This will not remove phrases even if the setting is on. You must use get_filled_phrase for that.
 
 		Arguments:
 			count(int=1): Number of phrases to generate
+			filled(bool=True): If true, returns phrases that are filled. Otherwise, it returns the raw phrases.
 
 		Returns:
 			List of generated phrases
 		'''
+		# If we're not filling the phrases, we can just use a list comp to gather a adiquitly randomized list of unfilled phrases
+		if not filled:
+			return [random_choice(self._phrases) for _ in range(count)]
+
+		# Iterating 'count' times and filling that many phrases
 		phrases = []
 		for _ in range(count):
-			filled_phrase = self._fill_phrase(random_choice(self._phrases))
+			filled_phrase = self.fill_phrase(random_choice(self._phrases))
 			phrases.append(filled_phrase)
 
 		return phrases
 
-	def get_filled_phrase(self) -> str:
+	def get_phrase(self, filled:bool=True) -> str:
 		''' Return a single phrase that has been populated with list information.
 
 		Will remove phrase from working phrase list if setting is on.
+
+		Arguments:
+			filled(bool=True): If true, returns phrases that are filled. Otherwise, it returns the raw phrases.
 		'''
 		shuffle(self._phrases)
-		phrase = self._fill_phrase(self._phrases[0])
+		phrase = self.fill_phrase(self._phrases[0]) if filled else self._phrases[0]
 
 		# Removing phrase if requested
 		if self._phrase_duplication is False:
@@ -280,6 +289,8 @@ class Data:
 	animation_length       = 4
 	animation_delay        = 52
 	animation_deceleration = 52
+	seperate_list_shuffle  = False
+	interanimation_length  = 4000
 
 	# Sound settings
 	start_sound_enabled = False
@@ -478,6 +489,43 @@ def source_delayed_hide():
 	with OBS_Source(Data.source_name) as source:
 		source.set_opacity(0)
 
+def source_spin_wheel(final_phrase:str, phrase_animation_list:list=None):
+	''' This function will ranzomise the text on screen.
+
+	This requires phrase_animation_list to be populated as well as Data.animation_enabled for the animation to play
+
+	Arguments:
+		final_phrase(str): This is the final message presented on screen after any animation plays.
+		phrase_animation_list(list[str]=None): This is a list of messages to display durin the animation. If this is not given, the animation will not play.
+	'''
+	print('Spinning wheel')
+
+	# Playing our start sound if requested
+	if Data.start_sound_enabled:
+		play_sound(Data.start_sound_path)
+
+	# Opening our source and making it visible
+	with OBS_Source(Data.source_name) as source:
+		source.set_opacity(100)
+
+		# Playing our animation if requested.
+		if Data.animation_enabled:
+			source.text_animation(
+				Data.animation_length * 1000, # In ms
+				Data.animation_deceleration,
+				phrase_animation_list
+			)
+
+		# Displaying the final phrases
+		print(f'Setting pre-final phrase to {final_phrase}')
+		source.set_text(final_phrase)
+
+	# Close OBS Source
+
+	# Playing our end sound
+	if Data.end_sound_enabled:
+		play_sound(Data.end_sound_path)
+
 def source_randomize_text():
 	''' Updates the text displayed in the source.
 
@@ -491,36 +539,41 @@ def source_randomize_text():
 	# Removing any callback to the delayed hide for our source
 	obs.timer_remove(source_delayed_hide)
 
-	# Playing our start sound
-	if Data.start_sound_enabled:
-		play_sound(Data.start_sound_path)
+	# Waiting for a requested delay
+	if Data.animation_enabled:
+		sleep(Data.animation_delay / 1000) # In ms
 
-	# Opening our source
-	with OBS_Source(Data.source_name) as source:
+	# Checking if we shuffle names seperately
+	if Data.seperate_list_shuffle:
+		# Now that we're seperating our list shuffle, we play our shuffle animation twice, but we need to record our final phrase
+		final_phrase = Data.Randomizer.get_phrase(filled=False)
+		source_spin_wheel(
+			final_phrase,
+			Data.Randomizer.get_dummy_phrases(Data.animation_phrase_count, filled=False)
+		)
 
-		# Making our source visible again
-		source.set_opacity(100)
+		# Waiting our interanimation duration
+		sleep(Data.interanimation_length / 1000) # In ms
 
-		# Displaying our animation if requested
-		if Data.animation_enabled:
-			source.text_animation(
-				Data.animation_length * 1000, # In seconds
-				Data.animation_deceleration,
-				Data.Randomizer.get_dummy_phrases(Data.animation_phrase_count)
-			)
+		# Playing our animation again, but with filled phrase values
+		source_spin_wheel(
+			Data.Randomizer.fill_phrase(final_phrase),
+			[Data.Randomizer.fill_phrase(final_phrase) for _ in range(Data.animation_phrase_count)]
+		)
 
-		# Displaying value requested as the final result reguardless if we have an animation
-		phrase = Data.Randomizer.get_filled_phrase()
-		print(f'Setting final text to {phrase}')
-		source.set_text(phrase)
+		# That's it, outside this if block will handle the delayed hide of the source
 
-		# Settings a timer to remove text after delay
-		if Data.phrase_lifetime != 0:
-			obs.timer_add(source_delayed_hide, Data.phrase_lifetime)
+	# If we're not shuffling out list seperatly, we just clal once instance of our wheel spin and we're good
+	else:
+		source_spin_wheel(
+			Data.Randomizer.get_phrase(filled=True),
+			Data.Randomizer.get_dummy_phrases(Data.animation_phrase_count, filled=True)
+		)
 
-	# Playing sound if requested
-	if Data.end_sound_enabled:
-		play_sound(Data.end_sound_path)
+	# Settings a timer to remove text after delay
+	if Data.phrase_lifetime != 0:
+		obs.timer_add(source_delayed_hide, Data.phrase_lifetime)
+
 
 def play_sound(sound_path):
 	# Creating a source and the data for the source with the sound's path
@@ -629,6 +682,8 @@ def script_defaults(settings):
 	obs.obs_data_set_default_int(  settings, 'animation_delay',        Data.animation_delay)
 	obs.obs_data_set_default_int(  settings, 'animation_length',       Data.animation_length)
 	obs.obs_data_set_default_int(  settings, 'animation_deceleration', Data.animation_deceleration)
+	obs.obs_data_set_default_bool( settings, 'seperate_list_shuffle',  Data.seperate_list_shuffle)
+	obs.obs_data_set_default_int(  settings, 'interanimation length',  Data.interanimation_length)
 
 	# Sound settings defaults
 	obs.obs_data_set_default_bool(  settings, 'start_sound_enabled', Data.start_sound_enabled)
@@ -686,6 +741,10 @@ def script_update(settings):
 	Data.animation_deceleration = obs.obs_data_get_int( settings, 'animation_deceleration')
 	Data.animation_length       = obs.obs_data_get_int( settings, 'animation_length')
 	Data.animation_delay        = obs.obs_data_get_int( settings, 'animation_delay')
+	Data.seperate_list_shuffle  = obs.obs_data_get_bool(settings, 'seperate_list_shuffle')
+	Data.interanimation_length  = obs.obs_data_get_int( settings, 'interanimation_length')
+
+	# Setting our function
 
 	# Getting sound settings
 	Data.start_sound_enabled = obs.obs_data_get_bool(  settings, 'start_sound_enabled')
@@ -802,6 +861,15 @@ def script_properties():
 		'animation_deceleration',
 		Data.lang.t('animation_deceleration'),
 		1, 200, 1)
+
+	obs.obs_properties_add_bool(Data.props,
+		'seperate_list_shuffle',
+		Data.lang.t('seperate_list_shuffle'))
+
+	obs.obs_properties_add_int_slider(Data.props,
+		'interanimation_length',
+		Data.lang.t('interanimation_length'),
+		20, 14000, 20)
 
 	# Sound settings
 	######################################

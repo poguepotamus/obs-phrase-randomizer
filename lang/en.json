@@ -11,6 +11,8 @@
     "animation_length": "Animation length (s)",
     "animation_delay": "Animation delay (ms)",
     "animation_deceleration": "Animation deceleration",
+    "seperate_list_shuffle": "Shuffle variables seperatly",
+    "interanimation_length": "Length between animations",
     "start_sound_enabled": "Play sound when shuffling",
     "start_sound_path": "Start sound path",
     "end_sound_enabled": "Play sound at result",
