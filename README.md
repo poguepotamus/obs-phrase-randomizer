@@ -33,11 +33,15 @@ There are two steps to install the script. First, letting OBS know where the scr
 
 1. Download code in a directory of your choice by your method of choice. If you don't know how to download, just click the 'Code' button on the GitHub page, and click 'Download ZIP'.
 
+	![Screenshot of the 'download zip' method](docs/download_zip_screenshot.png)
+
+2. Extract this zip file where you want
+
 	> *OBS has scripts in `C:\Program Files\obs-studio\data\obs-plugins\frontend-tools\scripts`, but you can put yours wherever you want.*
 
-2. Open your OBS, go to `tools`>`scripts` in the menu bar.
+3. Open your OBS, go to `tools`>`scripts` in the menu bar.
 
-3. Click the + button in the bottom left, and browse to your script directory. Select the file `phrase-randomizer.py`.
+4. Click the + button in the bottom left, and browse to your script directory. Select the file `phrase-randomizer.py`.
 
 ### Python Installation
 
