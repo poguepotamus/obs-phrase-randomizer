@@ -110,6 +110,14 @@ class Phrase_Randomizer:
 			phrase = phrase.replace(f'{{{position}}}', self._lists[list_name][int(index) % int(list_len)], 1)
 		return phrase
 
+	def _check_len(self) -> None:
+		''' Checks if the length of our phrase list is long enough to continue.
+
+		Will raise an error if our phrase list length is long enough.
+		'''
+		if len(self._phrases_master) <= self._min_phrase_count:
+			raise ValueError(f'Phrase list must include more than {self._min_phrase_count} phrases.')
+
 	def _load_list(self, list_name:str) -> None:
 		''' Loads a list from the file
 
@@ -146,6 +154,9 @@ class Phrase_Randomizer:
 		Returns:
 			List of generated phrases
 		'''
+		# Checking min phrase count
+		self._check_len()
+
 		# If we're not filling the phrases, we can just use a list comp to gather a adiquitly randomized list of unfilled phrases
 		if not filled:
 			return [random_choice(self._phrases) for _ in range(count)]
@@ -166,6 +177,9 @@ class Phrase_Randomizer:
 		Arguments:
 			filled(bool=True): If true, returns phrases that are filled. Otherwise, it returns the raw phrases.
 		'''
+		# Checking min phrase count
+		self._check_len()
+
 		shuffle(self._phrases)
 		phrase = self.fill_phrase(self._phrases[0]) if filled else self._phrases[0]
 
@@ -189,10 +203,6 @@ class Phrase_Randomizer:
 		Arguments:
 			phrase_list(list:str): A list of phrases from the user.
 		'''
-		# First, we check for length
-		if len(phrase_list) <= self._min_phrase_count:
-			raise ValueError(f'Phrase list must include more than {self._min_phrase_count} phrases.')
-
 		self._phrases_master = phrase_list
 
 		# Now we need to update our working phrase lists
