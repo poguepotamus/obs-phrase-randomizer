@@ -3,7 +3,7 @@
 '''
 Script written for the intention to be used to randomize phrases with variable inputs.
 
-For the extent of reading this, OBS writes print statments to a seperate log, so we don't setup logging statements as it's all handled by OBS for us.
+For the extent of reading this, OBS writes print statments to a separate log, so we don't setup logging statements as it's all handled by OBS for us.
 
 Relalvent pages:
 	- Official OBS scriping page: https://github.com/obsproject/obs-studio/wiki/Getting-Started-With-OBS-Scripting
@@ -299,7 +299,7 @@ class Data:
 	animation_length       = 4000
 	animation_delay        = 0
 	animation_deceleration = 52
-	seperate_list_shuffle  = False
+	separate_list_shuffle  = False
 	interanimation_length  = 4000
 
 	# Sound settings
@@ -553,8 +553,8 @@ def source_randomize_text():
 	if Data.animation_enabled:
 		sleep(Data.animation_delay / 1000) # In ms
 
-	# Checking if we shuffle names seperately
-	if Data.seperate_list_shuffle:
+	# Checking if we shuffle names separately
+	if Data.separate_list_shuffle:
 		# Now that we're seperating our list shuffle, we play our shuffle animation twice, but we need to record our final phrase
 		final_phrase = Data.Randomizer.get_phrase(filled=False)
 		source_spin_wheel(
@@ -573,7 +573,7 @@ def source_randomize_text():
 
 		# That's it, outside this if block will handle the delayed hide of the source
 
-	# If we're not shuffling out list seperatly, we just clal once instance of our wheel spin and we're good
+	# If we're not shuffling out list separately, we just clal once instance of our wheel spin and we're good
 	else:
 		source_spin_wheel(
 			Data.Randomizer.get_phrase(filled=True),
@@ -692,7 +692,7 @@ def script_defaults(settings):
 	obs.obs_data_set_default_int(  settings, 'animation_delay',        Data.animation_delay)
 	obs.obs_data_set_default_int(  settings, 'animation_length',       Data.animation_length)
 	obs.obs_data_set_default_int(  settings, 'animation_deceleration', Data.animation_deceleration)
-	obs.obs_data_set_default_bool( settings, 'seperate_list_shuffle',  Data.seperate_list_shuffle)
+	obs.obs_data_set_default_bool( settings, 'separate_list_shuffle',  Data.separate_list_shuffle)
 	obs.obs_data_set_default_int(  settings, 'interanimation length',  Data.interanimation_length)
 
 	# Sound settings defaults
@@ -751,7 +751,7 @@ def script_update(settings):
 	Data.animation_deceleration = obs.obs_data_get_int( settings, 'animation_deceleration')
 	Data.animation_length       = obs.obs_data_get_int( settings, 'animation_length')
 	Data.animation_delay        = obs.obs_data_get_int( settings, 'animation_delay')
-	Data.seperate_list_shuffle  = obs.obs_data_get_bool(settings, 'seperate_list_shuffle')
+	Data.separate_list_shuffle  = obs.obs_data_get_bool(settings, 'separate_list_shuffle')
 	Data.interanimation_length  = obs.obs_data_get_int( settings, 'interanimation_length')
 
 	# Setting our function
@@ -873,8 +873,8 @@ def script_properties():
 		1, 200, 1)
 
 	obs.obs_properties_add_bool(Data.props,
-		'seperate_list_shuffle',
-		Data.lang.t('seperate_list_shuffle'))
+		'separate_list_shuffle',
+		Data.lang.t('separate_list_shuffle'))
 
 	obs.obs_properties_add_int_slider(Data.props,
 		'interanimation_length',
