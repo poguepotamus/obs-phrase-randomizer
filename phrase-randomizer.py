@@ -287,15 +287,15 @@ class Data:
 	animation_enabled      = True
 	animation_phrase_count = 12
 	animation_length       = 4000
-	animation_delay        = 52
+	animation_delay        = 0
 	animation_deceleration = 52
 	seperate_list_shuffle  = False
 	interanimation_length  = 4000
 
 	# Sound settings
-	start_sound_enabled = False
+	start_sound_enabled = True
 	start_sound_path    = SCRIPT_DIRECTORY / 'sounds' / 'wheel.mp3'
-	end_sound_enabled   = False
+	end_sound_enabled   = True
 	end_sound_path      = SCRIPT_DIRECTORY / 'sounds' / 'alert.mp3'
 	output_index = 63 # Last index
 
