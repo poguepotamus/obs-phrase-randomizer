@@ -286,7 +286,7 @@ class Data:
 	# Animation Settings
 	animation_enabled      = True
 	animation_phrase_count = 12
-	animation_length       = 4
+	animation_length       = 4000
 	animation_delay        = 52
 	animation_deceleration = 52
 	seperate_list_shuffle  = False
@@ -511,7 +511,7 @@ def source_spin_wheel(final_phrase:str, phrase_animation_list:list=None):
 		# Playing our animation if requested.
 		if Data.animation_enabled:
 			source.text_animation(
-				Data.animation_length * 1000, # In ms
+				Data.animation_length, # In ms
 				Data.animation_deceleration,
 				phrase_animation_list
 			)
@@ -850,7 +850,7 @@ def script_properties():
 	obs.obs_properties_add_int_slider(Data.props,
 		'animation_length',
 		Data.lang.t('animation_length'),
-		1, 10, 1)
+		1000, 14000, 20)
 
 	obs.obs_properties_add_int_slider(Data.props,
 		'animation_delay',
